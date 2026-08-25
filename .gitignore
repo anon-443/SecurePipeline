@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Generated security and runtime artifacts
+security/reports/
+monitoring/data/
+*.log
+
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/
