@@ -1,0 +1,111 @@
+name: SecurePipeline Security Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  sast:
+    name: SAST with Bandit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: application
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Bandit
+        run: python -m pip install bandit==1.7.9
+
+      - name: Run Bandit SAST scan
+        run: bandit -r . -f sarif -o ../security/bandit.sarif
+
+      - name: Upload Bandit results to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: security/bandit.sarif
+          category: bandit
+
+      - name: Upload Bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-sast-report
+          path: security/bandit.sarif
+
+  dependencies:
+    name: OWASP dependency analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: SecurePipeline
+          path: .
+          format: HTML
+          out: security/dependency-check
+          args: >-
+            --failOnCVSS 7
+            --enableRetired
+            --scan application/requirements.txt
+
+      - name: Upload dependency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-report
+          path: security/dependency-check
+
+  image:
+    name: Trivy container scan
+    runs-on: ubuntu-latest
+    needs: [sast, dependencies]
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: docker build -f docker/Dockerfile -t securepipeline:security-${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: securepipeline:security-${{ github.sha }}
+          format: sarif
+          output: security/trivy.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Upload Trivy results to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: security/trivy.sarif
+          category: trivy
+
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-container-report
+          path: security/trivy.sarif
