@@ -6,6 +6,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
 APP_ENVIRONMENT = os.getenv("APP_ENVIRONMENT", "development")
+APP_BIND_HOST = os.getenv("APP_BIND_HOST", "127.0.0.1")
 
 app = Flask(__name__)
 REQUEST_COUNTER = Counter(
@@ -58,4 +59,4 @@ def internal_error(_error):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
+    app.run(host=APP_BIND_HOST, port=int(os.getenv("PORT", "8080")))

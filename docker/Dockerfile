@@ -17,7 +17,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:$PATH" \
     PORT=8080 \
     APP_VERSION=0.1.0 \
-    APP_ENVIRONMENT=production
+    APP_ENVIRONMENT=production \
+    APP_BIND_HOST=0.0.0.0
 
 RUN groupadd --system appgroup \
     && useradd --system --gid appgroup --create-home appuser
