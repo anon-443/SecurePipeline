@@ -80,7 +80,7 @@ jobs:
         run: docker build -f docker/Dockerfile -t securepipeline:security-${{ github.sha }} .
 
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: securepipeline:security-${{ github.sha }}
           format: sarif
@@ -91,7 +91,7 @@ jobs:
 
       - name: Upload Trivy results to code scanning
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: security/trivy.sarif
           category: trivy
