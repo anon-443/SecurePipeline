@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /build
 COPY application/requirements.txt .
 RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install --upgrade "pip>=26.1.2" "setuptools>=83.0.0" \
     && /opt/venv/bin/pip install -r requirements.txt
 
 FROM python:3.12-slim AS runtime
