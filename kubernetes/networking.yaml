@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: securepipeline
+  namespace: securepipeline
+  labels:
+    app.kubernetes.io/name: securepipeline
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: securepipeline
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: securepipeline
+  namespace: securepipeline
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - securepipeline.example.com
+      secretName: securepipeline-tls
+  rules:
+    - host: securepipeline.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: securepipeline
+                port:
+                  name: http

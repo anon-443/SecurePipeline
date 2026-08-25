@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: securepipeline
+  labels:
+    app.kubernetes.io/part-of: securepipeline
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: securepipeline-config
+  namespace: securepipeline
+  labels:
+    app.kubernetes.io/name: securepipeline
+data:
+  APP_ENVIRONMENT: production
+  APP_VERSION: "0.1.0"
+  PORT: "8080"

@@ -1,0 +1,74 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: securepipeline
+  namespace: securepipeline
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: securepipeline
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: securepipeline-read-config
+  namespace: securepipeline
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["securepipeline-config"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: securepipeline-read-config
+  namespace: securepipeline
+subjects:
+  - kind: ServiceAccount
+    name: securepipeline
+    namespace: securepipeline
+roleRef:
+  kind: Role
+  name: securepipeline-read-config
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: securepipeline
+  namespace: securepipeline
+automountServiceAccountToken: false
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: securepipeline-default-deny
+  namespace: securepipeline
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: securepipeline
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
