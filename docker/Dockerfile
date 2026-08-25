@@ -8,7 +8,11 @@ WORKDIR /build
 COPY application/requirements.txt .
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade "pip>=26.1.2" "setuptools>=83.0.0" \
-    && /opt/venv/bin/pip install -r requirements.txt
+    && /opt/venv/bin/pip install -r requirements.txt \
+    && /opt/venv/bin/pip uninstall -y pip setuptools msgpack || true \
+    && rm -rf /opt/venv/lib/python*/site-packages/pip* \
+              /opt/venv/lib/python*/site-packages/setuptools* \
+              /opt/venv/lib/python*/site-packages/msgpack*
 
 FROM python:3.12-slim AS runtime
 
