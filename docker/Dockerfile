@@ -20,7 +20,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     APP_ENVIRONMENT=production \
     APP_BIND_HOST=0.0.0.0
 
-RUN groupadd --system appgroup \
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system appgroup \
     && useradd --system --gid appgroup --create-home appuser
 
 WORKDIR /app
