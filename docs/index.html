@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SecurePipeline — an enterprise DevSecOps deployment platform portfolio dashboard." />
+  <title>SecurePipeline | DevSecOps Deployment Platform</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="site-header shell">
+    <a class="brand" href="#top" aria-label="SecurePipeline home">
+      <span class="brand-mark">SP</span>
+      <span><strong>SecurePipeline</strong><small>DevSecOps Deployment Platform</small></span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#operations">Operations</a>
+      <a class="nav-button" href="https://github.com/anon-443/SecurePipeline" target="_blank" rel="noreferrer">View repository ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse-dot"></span> Internship project · Production-minded delivery</div>
+        <h1>Ship faster.<br /><em>Secure by design.</em></h1>
+        <p class="hero-lead">SecurePipeline connects source control, automated quality gates, container security, Kubernetes delivery, and live observability into one repeatable engineering workflow.</p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#pipeline">Explore the pipeline <span>↓</span></a>
+          <a class="text-button" href="https://github.com/anon-443/SecurePipeline/blob/main/README.md">Read the docs <span>↗</span></a>
+        </div>
+        <div class="hero-proof">
+          <div><strong>5</strong><span>automated tests</span></div>
+          <div><strong>3</strong><span>security gates</span></div>
+          <div><strong>2</strong><span>Kubernetes replicas</span></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="SecurePipeline workflow summary">
+        <div class="visual-grid"></div>
+        <div class="orb orb-main"><span>SP</span></div>
+        <div class="orbit orbit-one"><span class="orbit-node node-git">⌘</span></div>
+        <div class="orbit orbit-two"><span class="orbit-node node-sec">✓</span></div>
+        <div class="orbit orbit-three"><span class="orbit-node node-kube">◈</span></div>
+        <div class="visual-caption"><span class="status-line"></span><span>Release pipeline operational</span></div>
+      </div>
+    </section>
+
+    <section class="section shell" id="pipeline">
+      <div class="section-heading"><div><span class="section-kicker">01 · Delivery system</span><h2>One pipeline.<br /><span>Every safeguard.</span></h2></div><p>Every commit moves through automated checks before it can become a deployable release. Security is a release condition, not a final afterthought.</p></div>
+      <div class="pipeline-grid">
+        <article class="pipeline-card card-blue"><div class="card-index">01</div><div class="card-icon">⌘</div><h3>Source & quality</h3><p>GitHub branches, pull requests, Python tests, and Ruff linting establish a clean baseline.</p><div class="card-tag">Git · GitHub Actions</div></article>
+        <article class="pipeline-card card-violet"><div class="card-index">02</div><div class="card-icon">◌</div><h3>Secure the build</h3><p>Bandit SAST, OWASP dependency analysis, and Trivy image scanning protect the release path.</p><div class="card-tag">SAST · SCA · CVE gates</div></article>
+        <article class="pipeline-card card-teal"><div class="card-index">03</div><div class="card-icon">▣</div><h3>Package & publish</h3><p>A multi-stage, non-root Docker image is built with immutable SHA and semantic version tags.</p><div class="card-tag">Docker · Docker Hub</div></article>
+        <article class="pipeline-card card-orange"><div class="card-index">04</div><div class="card-icon">◈</div><h3>Deploy & observe</h3><p>Kubernetes rolls out the service with probes, policies, resource controls, metrics, and logs.</p><div class="card-tag">Kubernetes · Grafana</div></article>
+      </div>
+      <div class="pipeline-rail" aria-hidden="true"><span></span><span></span><span></span></div>
+    </section>
+
+    <section class="section architecture-section" id="architecture">
+      <div class="shell">
+        <div class="section-heading"><div><span class="section-kicker">02 · System architecture</span><h2>From commit<br /><span>to confidence.</span></h2></div><p>The platform separates responsibilities cleanly: application runtime, delivery automation, security controls, orchestration, and observability.</p></div>
+        <div class="architecture-map">
+          <div class="map-column map-input"><span class="map-label">Developer input</span><div class="map-node"><b>GitHub</b><small>Source & PR workflow</small></div></div>
+          <div class="map-connector"><i></i><i></i><i></i></div>
+          <div class="map-column map-build"><span class="map-label">Automated delivery</span><div class="map-node"><b>GitHub Actions</b><small>Test · Scan · Build · Push</small></div><div class="mini-node-row"><span>Bandit</span><span>OWASP</span><span>Trivy</span></div></div>
+          <div class="map-connector"><i></i><i></i><i></i></div>
+          <div class="map-column map-runtime"><span class="map-label">Runtime platform</span><div class="map-node"><b>Kubernetes</b><small>SecurePipeline namespace</small></div><div class="mini-node-row"><span>Pods × 2</span><span>Service</span><span>Ingress</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="operations">
+      <div class="section-heading"><div><span class="section-kicker">03 · Operational posture</span><h2>Designed for<br /><span>the real world.</span></h2></div><p>The implementation demonstrates the controls reviewers expect from a modern engineering team: least privilege, safe rollouts, actionable telemetry, and documented recovery paths.</p></div>
+      <div class="operations-layout">
+        <div class="control-list">
+          <div class="control-row"><span class="control-symbol green">✓</span><div><b>Non-root runtime</b><small>Read-only filesystem, dropped capabilities, and restricted security context.</small></div><span class="control-state">ENFORCED</span></div>
+          <div class="control-row"><span class="control-symbol blue">↻</span><div><b>Safe rollout strategy</b><small>Two replicas, readiness probes, startup probes, and zero unavailable pods.</small></div><span class="control-state">ENABLED</span></div>
+          <div class="control-row"><span class="control-symbol violet">⌁</span><div><b>Centralized telemetry</b><small>Prometheus metrics, Grafana dashboards, Loki logs, and Promtail shipping.</small></div><span class="control-state">READY</span></div>
+          <div class="control-row"><span class="control-symbol orange">⊕</span><div><b>Network boundaries</b><small>Default-deny policy with explicit ingress and DNS egress exceptions.</small></div><span class="control-state">DEFINED</span></div>
+        </div>
+        <aside class="score-card"><span class="section-kicker">Release confidence</span><div class="score-ring"><strong>92</strong><span>/ 100</span></div><p>Foundation score based on automated quality, security, container, and Kubernetes controls.</p><div class="score-bar"><span></span></div><div class="score-foot"><span>Last verified</span><b>GitHub Actions</b></div></aside>
+      </div>
+    </section>
+
+    <section class="section final-call shell">
+      <div><span class="section-kicker">04 · Start here</span><h2>Build with<br /><em>confidence.</em></h2><p>Explore the source, follow the Ubuntu deployment guide, and reproduce the platform locally with Docker and Minikube.</p></div>
+      <div class="final-actions"><a class="primary-button" href="https://github.com/anon-443/SecurePipeline" target="_blank" rel="noreferrer">Open GitHub repository ↗</a><a class="secondary-button" href="https://github.com/anon-443/SecurePipeline/blob/main/UBUNTU_SETUP.md">Ubuntu setup guide ↗</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer shell"><span>SecurePipeline · DevSecOps internship project</span><span>Built with discipline, shipped with evidence.</span></footer>
+</body>
+</html>

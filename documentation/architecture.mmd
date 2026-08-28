@@ -1,0 +1,55 @@
+flowchart LR
+    DEV([Developer]) --> PR[GitHub Pull Request]
+    PR --> CI[GitHub Actions]
+
+    subgraph QUALITY[Quality and Security Gates]
+        TEST[Pytest + Ruff]
+        SAST[Bandit SAST]
+        SCA[OWASP Dependency-Check]
+        TRIVY[Trivy Image Scan]
+    end
+
+    CI --> TEST
+    CI --> SAST
+    CI --> SCA
+    TEST --> IMAGE[Multi-stage Docker Image]
+    SAST --> IMAGE
+    SCA --> IMAGE
+    IMAGE --> TRIVY
+    TRIVY --> REG[(Docker Hub Registry)]
+
+    subgraph K8S[Kubernetes: securepipeline namespace]
+        DEPLOY[Deployment x2]
+        SERVICE[ClusterIP Service]
+        INGRESS[Ingress + TLS]
+        POLICY[RBAC + NetworkPolicy]
+        PROBES[Startup + Readiness + Liveness]
+    end
+
+    REG --> DEPLOY
+    DEPLOY --> SERVICE
+    SERVICE --> INGRESS
+    DEPLOY --- POLICY
+    DEPLOY --- PROBES
+
+    subgraph OBS[Observability]
+        PROM[Prometheus]
+        GRAF[Grafana]
+        LOKI[Loki]
+        PROMTAIL[Promtail]
+    end
+
+    SERVICE --> PROM
+    PROM --> GRAF
+    DEPLOY --> PROMTAIL
+    PROMTAIL --> LOKI
+    LOKI --> GRAF
+
+    classDef source fill:#17233b,stroke:#6da8ff,color:#f4f7fb
+    classDef security fill:#211b3d,stroke:#a78bfa,color:#f4f7fb
+    classDef runtime fill:#122f32,stroke:#39d4bd,color:#f4f7fb
+    classDef observe fill:#3a271d,stroke:#ffae70,color:#f4f7fb
+    class DEV,PR,CI source
+    class TEST,SAST,SCA,TRIVY security
+    class IMAGE,REG,DEPLOY,SERVICE,INGRESS,POLICY,PROBES runtime
+    class PROM,GRAF,LOKI,PROMTAIL observe
