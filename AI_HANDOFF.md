@@ -720,3 +720,27 @@ The latest verified CI and security workflows for commit `2c057bd` both passed. 
 Another AI should treat this project as a partially completed but strong internship submission foundation. The repository and automation are implemented. The Ubuntu VM prerequisites are also installed and Minikube is running. The remaining work is operational execution: authenticate the VM to GitHub, clone the private repository, run the local tests, build the image despite any local registry DNS issues, deploy it to Minikube, verify health and security settings, install monitoring selectively, enable GitHub Pages, and collect screenshots and final evidence.
 
 The next AI must preserve the existing secure design. It should not replace the Dockerfile with an insecure single-stage build, remove Trivy to make a workflow pass, add secrets to source control, delete the Ubuntu VM, or claim that GitHub Pages runs the backend. All unverified results must be recorded as pending until the user runs the commands in the Ubuntu VM.
+
+
+## Latest Verified Ubuntu VM Evidence — 03 September 2026
+
+The user successfully verified the project on the Ubuntu VMware VM. Ubuntu 24.04.4 LTS and x86_64 are confirmed. The VM has approximately 24 GB free disk space, Docker 29.7.2, Docker Compose v5.5.0, kubectl v1.34.11, and Minikube v1.38.1.
+
+Docker is active and the `hello-world` container ran successfully. The application virtual environment passed all five tests and Ruff linting. The Docker image built successfully, the `/health` endpoint returned `{"service":"securepipeline","status":"healthy"}`, and the running container identity was `uid=999(appuser) gid=999(appgroup)`, confirming non-root execution.
+
+Minikube was restarted with the two-CPU resource profile and its node reached `Ready`. The latest repository commit `5ce6b92` fixed the Kustomize labels schema, and the user confirmed `Kustomize validation passed`. The Kubernetes deployment rolled out successfully with two running pods, an internal ClusterIP service, a default-deny NetworkPolicy, and a PodDisruptionBudget.
+
+The user then ran the Kubernetes port-forward successfully. Endpoint verification returned:
+
+```text
+{"service":"securepipeline","status":"healthy"}
+{"status":"ready","timestamp":"2026-09-02T20:54:38.332571+00:00"}
+# HELP securepipeline_http_requests_total Total HTTP requests handled by SecurePipeline
+# TYPE securepipeline_http_requests_total counter
+securepipeline_http_requests_total{endpoint="health",method="GET",status="200"} 12.0
+securepipeline_http_requests_total{endpoint="ready",method="GET",status="200"} 19.0
+```
+
+Docker Hub connectivity was also verified. DNS resolved for `auth.docker.io` and `registry-1.docker.io`, and an HTTPS request to the Docker token endpoint returned HTTP 405 with an `Allow: GET`/`POST` response. This is an expected endpoint-method response and confirms that network/DNS connectivity is working. The earlier Docker build timeout was therefore transient or environment-specific, not a Dockerfile defect.
+
+The only remaining operational work is to capture screenshots, install and verify the monitoring stack as VM resources allow, enable GitHub Pages in repository settings, and complete the final internship report, presentation, and demo evidence. The private GitHub CLI login is still not configured, but Git fetch access has already worked and the local checkout was successfully updated to `5ce6b92`.
