@@ -445,3 +445,278 @@ The project is fully ready for internship submission when the repository is clea
 ## Handoff Summary
 
 The previous AI completed the repository foundation, hardened the Docker and security workflows through iterative fixes, created the Kubernetes and monitoring configuration, built a professional GitHub Pages dashboard, rendered the architecture diagram, wrote the deployment/report/demo materials, pushed everything to GitHub, and created a valid ZIP archive. The user completed Ubuntu cleanup, Docker installation, kubectl installation, and Minikube startup. The remaining critical work is authenticating the Ubuntu VM to the private repository, running the code locally, deploying to Minikube, installing or selectively configuring observability, enabling GitHub Pages, and collecting final evidence.
+
+
+## Complete Ubuntu VMware Setup Procedure
+
+This section is written for a beginner or another AI assisting the user from the beginning.
+
+### 1. VMware and Ubuntu Requirements
+
+Use Ubuntu because the internship assignment explicitly names Ubuntu Linux. Kali Linux is not the documented primary environment for this project. VMware Workstation is acceptable for the internship demonstration.
+
+The user’s existing Ubuntu VM initially had a 59 GB root disk with only 814 MB free. It was safely cleaned without reinstalling the operating system. The cleanup removed an unused Nessus installation and an old Linux kernel build directory. The VM now has approximately 33 GB free.
+
+If a fresh VM is ever required, use an Ubuntu 24.04 LTS 64-bit ISO, allocate at least 80 GB as a dynamically growing virtual disk, assign approximately 8 GB RAM, assign two to four CPUs depending on the host, and use NAT networking. The current user’s VM has two CPUs, so Kubernetes commands must use two CPUs.
+
+### 2. Check the Ubuntu System
+
+Open Terminal and run:
+
+```bash
+cat /etc/os-release
+uname -m
+free -h
+df -h /
+command -v git && git --version || echo "Git is missing"
+command -v docker && docker --version || echo "Docker is missing"
+command -v kubectl && kubectl version --client || echo "kubectl is missing"
+command -v minikube && minikube version || echo "Minikube is missing"
+command -v helm && helm version --short || echo "Helm is missing"
+```
+
+The expected architecture is `x86_64`. Before installing Docker or Kubernetes, keep at least 15–20 GB free. If disk space is low, inspect the largest directories with `Disk Usage Analyzer` or, from Terminal, use:
+
+```bash
+du -xhd1 "$HOME" 2>/dev/null | sort -h
+sudo du -xhd1 /opt /var 2>/dev/null | sort -h
+```
+
+Never blindly delete `/usr`, `/bin`, `/lib`, `/boot`, `/var`, `/opt`, or swap files. Inspect their contents first.
+
+### 3. Safe Disk Cleanup
+
+The following commands remove package cache, old system journal entries, user cache, Trash contents, and unused packages:
+
+```bash
+sudo apt clean
+sudo journalctl --vacuum-time=7d
+rm -rf ~/.cache/*
+gio trash --empty
+sudo apt autoremove --purge -y
+df -h /
+```
+
+For this VM, the largest unnecessary items were identified before deletion. Nessus was removed with:
+
+```bash
+sudo systemctl stop nessusd 2>/dev/null || true
+sudo systemctl disable nessusd 2>/dev/null || true
+sudo apt purge -y 'nessus*' 'nessusagent*' 'nessuscli*' 2>/dev/null || true
+sudo rm -rf /opt/nessus
+sudo rm -rf /etc/nessus /var/lib/nessus /var/log/nessus
+df -h /
+```
+
+An old kernel build directory was removed only after confirming it contained generated build artifacts and was not an active kernel project:
+
+```bash
+rm -rf -- "$HOME/build/kernel"
+df -h /
+```
+
+This recovered the VM from 99% full to approximately 43% used, with 33 GB available.
+
+### 4. Repair the Package Manager and Install Basic Tools
+
+If an earlier update was interrupted, repair it before installing anything else:
+
+```bash
+sudo dpkg --configure -a
+sudo apt --fix-broken install -y
+sudo apt update
+sudo apt install -y ca-certificates curl git unzip jq python3 python3-venv gnupg
+```
+
+Verify:
+
+```bash
+git --version
+python3 --version
+df -h /
+```
+
+The user’s verified result was Git 2.43.0, Python 3.12.3, and 33 GB free.
+
+If Ubuntu shows `unattended-upgrade in progress during shutdown`, do not immediately force power off. The shutdown service may take up to 30 minutes. Press Esc once to see progress and wait while the timer advances. If the system remains genuinely unchanged after approximately 45–60 minutes, try VMware **VM → Power → Restart Guest**. Use forced power-off only as a last resort. After reboot, repair with `sudo dpkg --configure -a` and `sudo apt --fix-broken install -y`.
+
+### 5. Install Docker Engine
+
+Use Docker’s official Ubuntu repository. Remove conflicting packages, add the repository key, install Docker Engine and Compose, and enable the service:
+
+```bash
+sudo dpkg --configure -a
+sudo apt --fix-broken install -y
+sudo apt update
+sudo apt remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+printf 'Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nArchitectures: amd64\nSigned-By: /etc/apt/keyrings/docker.asc\n' "$(. /etc/os-release && echo "$VERSION_CODENAME")" | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"
+```
+
+Start a new shell group session and verify:
+
+```bash
+newgrp docker
+docker --version
+docker compose version
+sudo systemctl is-active docker
+docker run --rm hello-world
+```
+
+The user verified Docker 29.7.2, Docker Compose v5.5.0, an active Docker service, and the successful `Hello from Docker!` container.
+
+### 6. Install kubectl
+
+The user installed kubectl from the Kubernetes stable v1.34 repository:
+
+```bash
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+printf 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /\n' | sudo tee /etc/apt/sources.list.d/kubernetes.list >/dev/null
+sudo apt update
+sudo apt install -y kubectl
+kubectl version --client
+```
+
+### 7. Install and Start Minikube
+
+Install Minikube:
+
+```bash
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+rm minikube-linux-amd64
+minikube version
+```
+
+The user’s VMware VM has two CPUs. Start Minikube with a resource profile that fits the VM:
+
+```bash
+minikube start --driver=docker --cpus=2 --memory=3072 --disk-size=20g
+kubectl get nodes
+kubectl get pods -A
+minikube status
+```
+
+The verified result was a `minikube` control-plane node in `Ready` state, Kubernetes v1.35.1, and running kubelet and API server. Do not request three CPUs on this VM.
+
+### 8. Authenticate and Clone the Private Repository
+
+GitHub does not accept the normal account password for Git HTTPS authentication. Use GitHub CLI browser authentication:
+
+```bash
+sudo apt update
+sudo apt install -y gh
+gh auth logout -h github.com
+gh auth login -h github.com -p https -w
+```
+
+Choose GitHub.com, HTTPS, authenticate Git, and login with a web browser. Open the exact one-time URL and use the displayed code locally. Never send the code, password, personal access token, or Docker Hub token to an AI assistant.
+
+Verify access:
+
+```bash
+gh auth status
+gh repo view anon-443/SecurePipeline
+```
+
+Then clone:
+
+```bash
+cd "$HOME"
+gh repo clone anon-443/SecurePipeline "$HOME/SecurePipeline"
+cd "$HOME/SecurePipeline"
+git status
+```
+
+A 404 from `gh repo view` means that the logged-in GitHub account cannot see the private repository, usually because the wrong account is authenticated. Do not create a second repository or make the project public merely to bypass this issue. If a failed clone created an incomplete directory, inspect it before removing it; only delete it if it contains no important work.
+
+## Complete Docker and Trivy Vulnerability-Analysis History
+
+This section records the vulnerability investigation and remediation sequence that another AI must understand before changing the Dockerfile or security workflow.
+
+### Initial Vulnerability Analysis
+
+A Trivy scan of `securepipeline:latest` reported 19 HIGH-severity operating-system package vulnerabilities. Examples included `libexpat1`, `libssl3`, and `python3.11-minimal`. The investigation separated OS-level packages from Python application dependencies. The Python dependencies inside the virtual environment at `/app/application/.venv` were clean; the issue was isolated to the Debian base-image layer.
+
+The correct interpretation was that application requirements were not the source of the reported vulnerabilities. The base image and its OS packages required remediation.
+
+### First Remediation Attempt and Build Failure
+
+The first remediation attempt added `apt-get update && apt-get upgrade -y` to the Dockerfile’s multi-stage build. The build then failed during image creation with:
+
+```text
+ERROR: failed to calculate checksum ... "/install/lib/python3.12/site-packages": not found
+```
+
+The root cause was an inconsistent builder layout. The pip installation step was missing or packages were being installed into the global Python path rather than the expected `/install` path. The later `COPY` instruction therefore referenced a directory that did not exist.
+
+The correct principle is to create one explicit virtual environment in the builder, install dependencies into that environment, and copy that exact directory into the runtime image. The current implementation uses `/opt/venv` consistently between builder and runtime stages.
+
+### Distroless Runtime Limitation
+
+Distroless runtime images intentionally omit package managers and shell utilities. `apt-get` cannot be executed inside a Google Distroless runtime image because there is no package manager by design. OS-level patching must occur in the builder or by using a patched base image; it cannot be performed inside the final distroless runtime stage.
+
+The final repository uses a Python slim runtime rather than pretending that a distroless image can run apt commands. The runtime is hardened through a multi-stage build, non-root execution, removal of unnecessary packaging artifacts, current package updates during image creation, and a small production dependency set.
+
+### Virtual-Environment Refactoring
+
+The Dockerfile was refactored so that the builder creates and populates `/opt/venv`, then the runtime copies the exact `/opt/venv` directory. This eliminated the missing `/install/lib/python3.12/site-packages` checksum error and made the dependency boundary explicit.
+
+The runtime image includes only the application requirements and production server. Development test and lint dependencies remain outside the runtime image. The application is executed through Gunicorn as a non-root `appuser`.
+
+### Docker Hub Network Timeout
+
+A local build attempt using:
+
+```bash
+docker build --no-cache -t securepipeline:latest .
+```
+
+failed after approximately 100 seconds with:
+
+```text
+dial tcp: lookup registry-1.docker.io on 1.1.1.1:53: i/o timeout
+```
+
+This was not a Dockerfile or application defect. The failure occurred while Docker attempted to resolve or contact Docker Hub to pull `python:3.12-slim`. The root cause was local network or DNS resolution failure in the environment.
+
+The correct troubleshooting order is:
+
+```bash
+ping -c 3 1.1.1.1
+getent hosts registry-1.docker.io
+curl -I https://registry-1.docker.io/v2/
+docker pull python:3.12-slim
+```
+
+If DNS resolution fails, inspect VMware NAT connectivity, the Ubuntu DNS configuration, VPN or proxy settings, and the host firewall. Do not rewrite the Dockerfile or disable security scans to hide a registry network timeout. GitHub Actions later validated the image build and security workflow successfully.
+
+### Final Remediation Result
+
+The security workflow was corrected and the image was hardened iteratively. The remediation included:
+
+1. Updating the Trivy GitHub Action to a verified maintained release.
+2. Scanning production application code rather than test assertions for Bandit SAST.
+3. Making the application bind host configurable to remove the Bandit B104 finding.
+4. Applying current Debian security updates during image construction.
+5. Upgrading vulnerable Python runtime dependencies.
+6. Removing the unnecessary direct `msgpack` dependency.
+7. Removing unused system-level packaging and build-only artifacts from the final runtime layer.
+8. Preserving the Trivy SARIF report as a workflow artifact.
+9. Removing the optional Code Scanning upload step because the repository token lacked the required checks permission; the blocking Trivy scan remained enabled.
+
+The latest verified CI and security workflows for commit `2c057bd` both passed. The security workflow therefore represents a real remediation history rather than a bypassed or ignored vulnerability gate.
+
+## Handoff Interpretation for Another AI
+
+Another AI should treat this project as a partially completed but strong internship submission foundation. The repository and automation are implemented. The Ubuntu VM prerequisites are also installed and Minikube is running. The remaining work is operational execution: authenticate the VM to GitHub, clone the private repository, run the local tests, build the image despite any local registry DNS issues, deploy it to Minikube, verify health and security settings, install monitoring selectively, enable GitHub Pages, and collect screenshots and final evidence.
+
+The next AI must preserve the existing secure design. It should not replace the Dockerfile with an insecure single-stage build, remove Trivy to make a workflow pass, add secrets to source control, delete the Ubuntu VM, or claim that GitHub Pages runs the backend. All unverified results must be recorded as pending until the user runs the commands in the Ubuntu VM.
