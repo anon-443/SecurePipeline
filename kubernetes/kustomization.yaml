@@ -9,6 +9,6 @@ resources:
   - networking.yaml
   - security-policies.yaml
 
-commonLabels:
+labels:
   app.kubernetes.io/part-of: securepipeline
   app.kubernetes.io/managed-by: kustomize
