@@ -10,5 +10,8 @@ resources:
   - security-policies.yaml
 
 labels:
-  app.kubernetes.io/part-of: securepipeline
-  app.kubernetes.io/managed-by: kustomize
+  - pairs:
+      app.kubernetes.io/part-of: securepipeline
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: true
+    includeTemplates: true
