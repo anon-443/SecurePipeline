@@ -744,3 +744,25 @@ securepipeline_http_requests_total{endpoint="ready",method="GET",status="200"} 1
 Docker Hub connectivity was also verified. DNS resolved for `auth.docker.io` and `registry-1.docker.io`, and an HTTPS request to the Docker token endpoint returned HTTP 405 with an `Allow: GET`/`POST` response. This is an expected endpoint-method response and confirms that network/DNS connectivity is working. The earlier Docker build timeout was therefore transient or environment-specific, not a Dockerfile defect.
 
 The only remaining operational work is to capture screenshots, install and verify the monitoring stack as VM resources allow, enable GitHub Pages in repository settings, and complete the final internship report, presentation, and demo evidence. The private GitHub CLI login is still not configured, but Git fetch access has already worked and the local checkout was successfully updated to `5ce6b92`.
+
+
+## Final Local Validation Evidence — 03 September 2026
+
+The user completed a clean local validation run on the Ubuntu VMware VM. The Docker Hub registry lookup continued to fail intermittently during the later rebuild attempt with a DNS timeout for `registry-1.docker.io`. This remains an environmental network issue, not an application or Kubernetes defect. The previously built `securepipeline:0.1.0` image remained available locally and was successfully tested.
+
+The standalone Docker validation passed on host port 8081. The container returned `{"service":"securepipeline","status":"healthy"}` and ran as `uid=999(appuser) gid=999(appgroup) groups=999(appgroup)`. This confirms the image starts correctly and does not run as root.
+
+Minikube was running with a Ready control-plane node. The Kubernetes manifests were applied successfully, the deployment rollout completed, and two application pods were Running and Ready. The Service, default-deny NetworkPolicy, and PodDisruptionBudget were present.
+
+Because host port 8080 was already occupied by an earlier forward, the Kubernetes Service was forwarded on port 8082 instead. The user verified the following responses:
+
+```text
+{"service":"securepipeline","status":"healthy"}
+{"status":"ready","timestamp":"2026-09-03T15:29:15.397759+00:00"}
+# HELP securepipeline_http_requests_total Total HTTP requests handled by SecurePipeline
+# TYPE securepipeline_http_requests_total counter
+securepipeline_http_requests_total{endpoint="health",method="GET",status="200"} 122.0
+securepipeline_http_requests_total{endpoint="ready",method="GET",status="200"} 262.0
+```
+
+This is the strongest local evidence currently available: application unit tests and linting pass, the Docker image runs as a non-root user, Kubernetes is healthy, port forwarding works, health and readiness probes return successful responses, and Prometheus metrics are emitted. A fresh image rebuild should be repeated later when Docker Hub DNS is stable, but the core deployment is verified.
